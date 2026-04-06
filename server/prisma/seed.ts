@@ -14,7 +14,7 @@ async function main() {
   // ------------------------------------------------------------
   // 1. UNIVERSITIES
   // ------------------------------------------------------------
-  const [lau, aub, usj] = await Promise.all([
+  const [lau, aub, usj, liu] = await Promise.all([
     prisma.university.upsert({
       where: { emailDomain: "lau.edu.lb" },
       update: {},
@@ -40,6 +40,15 @@ async function main() {
         name: "Université Saint-Joseph",
         location: "Beirut, Lebanon",
         emailDomain: "usj.edu.lb",
+      },
+    }),
+    prisma.university.upsert({
+      where: { emailDomain: "liu.edu.lb" },
+      update: {},
+      create: {
+        name: "Lebanese International University",
+        location: "Beirut, Lebanon",
+        emailDomain: "liu.edu.lb",
       },
     }),
   ]);
