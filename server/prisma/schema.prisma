@@ -1,0 +1,334 @@
+// ================================================================
+// Vyntrix — Prisma Schema
+// Database: PostgreSQL
+// ================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ================================================================
+// ENUMS
+// ================================================================
+
+enum StudentStatus {
+  STUDENT
+  GRADUATE
+}
+
+enum ProficiencyLevel {
+  BEGINNER
+  INTERMEDIATE
+  EXPERT
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  INTERNSHIP
+  CONTRACT
+  REMOTE
+}
+
+enum JobStatus {
+  OPEN
+  CLOSED
+  DRAFT
+}
+
+enum ApplicationStatus {
+  PENDING
+  REVIEWED
+  ACCEPTED
+  REJECTED
+}
+
+enum HrRole {
+  HR_MANAGER
+  RECRUITER
+  ADMIN
+}
+
+enum SkillCategory {
+  PROGRAMMING
+  FRAMEWORK
+  DATABASE
+  DEVOPS
+  DESIGN
+  SOFT_SKILL
+  LANGUAGE
+  OTHER
+}
+
+// ================================================================
+// UNIVERSITY
+// ================================================================
+
+model University {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  location    String
+  emailDomain String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  students    Student[]
+
+  @@map("universities")
+}
+
+// ================================================================
+// STUDENT
+// ================================================================
+
+model Student {
+  id             Int           @id @default(autoincrement())
+  universityId   Int
+  firstName      String
+  lastName       String
+  email          String        @unique
+  passwordHash   String
+  department     String
+  degree         String
+  gpa            Float?
+  graduationDate DateTime?
+  graduationYear Int?
+  status         StudentStatus @default(STUDENT)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  university   University      @relation(fields: [universityId], references: [id])
+  profile      StudentProfile?
+  skills       StudentSkill[]
+  projects     Project[]
+  applications Application[]
+  matchResults MatchResult[]
+
+  @@index([universityId])
+  @@index([status])
+  @@index([gpa])
+  @@map("students")
+}
+
+// ================================================================
+// STUDENT PROFILE
+// ================================================================
+
+model StudentProfile {
+  id          Int      @id @default(autoincrement())
+  studentId   Int      @unique
+  cvUrl       String?
+  linkedinUrl String?
+  githubUrl   String?
+  phone       String?
+  bio         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("student_profiles")
+}
+
+// ================================================================
+// PROJECT
+// ================================================================
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  studentId   Int
+  title       String
+  description String?
+  techStack   String?
+  projectUrl  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@map("projects")
+}
+
+// ================================================================
+// SKILL
+// ================================================================
+
+model Skill {
+  id            Int           @id @default(autoincrement())
+  name          String        @unique
+  category      SkillCategory @default(OTHER)
+  createdAt     DateTime      @default(now())
+
+  studentSkills StudentSkill[]
+  jobSkills     JobSkill[]
+
+  @@map("skills")
+}
+
+// ================================================================
+// STUDENT SKILL
+// ================================================================
+
+model StudentSkill {
+  id               Int              @id @default(autoincrement())
+  studentId        Int
+  skillId          Int
+  proficiencyLevel ProficiencyLevel @default(BEGINNER)
+  createdAt        DateTime         @default(now())
+
+  student          Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  skill            Skill            @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, skillId])
+  @@index([studentId])
+  @@index([skillId])
+  @@map("student_skills")
+}
+
+// ================================================================
+// COMPANY
+// ================================================================
+
+model Company {
+  id          Int      @id @default(autoincrement())
+  companyName String
+  industry    String
+  location    String
+  website     String?
+  email       String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  hrUsers     HrUser[]
+  jobPostings JobPosting[]
+
+  @@map("companies")
+}
+
+// ================================================================
+// HR USER
+// ================================================================
+
+model HrUser {
+  id           Int      @id @default(autoincrement())
+  companyId    Int
+  fullName     String
+  email        String   @unique
+  passwordHash String
+  role         HrRole   @default(RECRUITER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  company      Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  jobPostings  JobPosting[]
+
+  @@index([companyId])
+  @@map("hr_users")
+}
+
+// ================================================================
+// JOB POSTING
+// ================================================================
+
+model JobPosting {
+  id          Int       @id @default(autoincrement())
+  companyId   Int
+  hrUserId    Int
+  title       String
+  description String
+  jobType     JobType   @default(FULL_TIME)
+  location    String
+  minGpa      Float?
+  postedDate  DateTime  @default(now())
+  deadline    DateTime?
+  status      JobStatus @default(OPEN)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  company        Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  hrUser         HrUser        @relation(fields: [hrUserId], references: [id])
+  requiredSkills JobSkill[]
+  applications   Application[]
+  matchResults   MatchResult[]
+
+  @@index([companyId])
+  @@index([hrUserId])
+  @@index([status])
+  @@index([postedDate])
+  @@map("job_postings")
+}
+
+// ================================================================
+// JOB SKILL
+// ================================================================
+
+model JobSkill {
+  id            Int              @id @default(autoincrement())
+  jobId         Int
+  skillId       Int
+  requiredLevel ProficiencyLevel @default(BEGINNER)
+  createdAt     DateTime         @default(now())
+
+  job           JobPosting       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  skill         Skill            @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([jobId, skillId])
+  @@index([jobId])
+  @@index([skillId])
+  @@map("job_skills")
+}
+
+// ================================================================
+// APPLICATION
+// ================================================================
+
+model Application {
+  id                Int               @id @default(autoincrement())
+  studentId         Int
+  jobId             Int
+  applicationDate   DateTime          @default(now())
+  applicationStatus ApplicationStatus @default(PENDING)
+  coverLetter       String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  student           Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  job               JobPosting        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, jobId])
+  @@index([studentId])
+  @@index([jobId])
+  @@index([applicationStatus])
+  @@map("applications")
+}
+
+// ================================================================
+// MATCH RESULT
+// ================================================================
+
+model MatchResult {
+  id          Int      @id @default(autoincrement())
+  studentId   Int
+  jobId       Int
+  matchScore  Float
+  skillScore  Float
+  gpaScore    Float
+  extraScore  Float
+  matchedOn   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  student     Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  job         JobPosting @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, jobId])
+  @@index([studentId])
+  @@index([jobId])
+  @@index([matchScore])
+  @@map("match_results")
+}
