@@ -116,7 +116,7 @@ export const sendPasswordResetEmail = async (data: {
   token: string;
   role: "STUDENT" | "HR";
 }) => {
-  const resetUrl = `http://localhost:5173/reset-password?token=${data.token}&role=${data.role}`;
+ const resetUrl = `https://vyntrix-psi.vercel.app/reset-password?token=${data.token}&role=${data.role}`;
 
   await resend.emails.send({
     from: process.env.FROM_EMAIL || "onboarding@resend.dev",
