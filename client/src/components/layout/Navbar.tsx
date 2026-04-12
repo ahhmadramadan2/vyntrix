@@ -14,7 +14,7 @@ interface SearchResult {
 }
 
 export const Navbar = () => {
-  const { user, role, clearAuth, isStudent, isHR } = useAuth();
+  const { user, role, clearAuth, isStudent } = useAuth();
   const navigate = useNavigate();
 
   const [query, setQuery] = useState("");
