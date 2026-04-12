@@ -65,6 +65,19 @@ enum SkillCategory {
   OTHER
 }
 
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum NotificationType {
+  APPLICATION_ACCEPTED
+  APPLICATION_REJECTED
+  APPLICATION_REVIEWED
+  INFO
+}
+
 // ================================================================
 // UNIVERSITY
 // ================================================================
@@ -87,27 +100,34 @@ model University {
 // ================================================================
 
 model Student {
-  id             Int           @id @default(autoincrement())
-  universityId   Int
-  firstName      String
-  lastName       String
-  email          String        @unique
-  passwordHash   String
-  department     String
-  degree         String
-  gpa            Float?
-  graduationDate DateTime?
-  graduationYear Int?
-  status         StudentStatus @default(STUDENT)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id                 Int           @id @default(autoincrement())
+  universityId       Int
+  firstName          String
+  lastName           String
+  email              String        @unique
+  passwordHash       String
+  department         String
+  degree             String
+  gpa                Float?
+  graduationDate     DateTime?
+  graduationYear     Int?
+  status             StudentStatus @default(STUDENT)
+  resetToken         String?
+  resetTokenExpiry   DateTime?
+  lastUsernameChange DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
-  university   University      @relation(fields: [universityId], references: [id])
-  profile      StudentProfile?
-  skills       StudentSkill[]
-  projects     Project[]
-  applications Application[]
-  matchResults MatchResult[]
+  university          University      @relation(fields: [universityId], references: [id])
+  profile             StudentProfile?
+  skills              StudentSkill[]
+  projects            Project[]
+  applications        Application[]
+  matchResults        MatchResult[]
+  notifications       Notification[]
+  sentConnections     Connection[]    @relation("SentConnections")
+  receivedConnections Connection[]    @relation("ReceivedConnections")
+  sentMessages        Message[]       @relation("SentMessages")
 
   @@index([universityId])
   @@index([status])
@@ -122,6 +142,7 @@ model Student {
 model StudentProfile {
   id          Int      @id @default(autoincrement())
   studentId   Int      @unique
+  avatarUrl   String?
   cvUrl       String?
   linkedinUrl String?
   githubUrl   String?
@@ -202,6 +223,7 @@ model Company {
   location    String
   website     String?
   email       String   @unique
+  logoUrl     String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -216,17 +238,19 @@ model Company {
 // ================================================================
 
 model HrUser {
-  id           Int      @id @default(autoincrement())
-  companyId    Int
-  fullName     String
-  email        String   @unique
-  passwordHash String
-  role         HrRole   @default(RECRUITER)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id               Int      @id @default(autoincrement())
+  companyId        Int
+  fullName         String
+  email            String   @unique
+  passwordHash     String
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  role             HrRole   @default(RECRUITER)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  company      Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  jobPostings  JobPosting[]
+  company     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  jobPostings JobPosting[]
 
   @@index([companyId])
   @@map("hr_users")
@@ -331,4 +355,67 @@ model MatchResult {
   @@index([jobId])
   @@index([matchScore])
   @@map("match_results")
+}
+
+// ================================================================
+// CONNECTION
+// ================================================================
+
+model Connection {
+  id         Int              @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  status     ConnectionStatus @default(PENDING)
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  sender    Student   @relation("SentConnections",     fields: [senderId],   references: [id], onDelete: Cascade)
+  receiver  Student   @relation("ReceivedConnections", fields: [receiverId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@unique([senderId, receiverId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@map("connections")
+}
+
+// ================================================================
+// MESSAGE
+// ================================================================
+
+model Message {
+  id           Int        @id @default(autoincrement())
+  connectionId Int
+  senderId     Int
+  content      String
+  read         Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+
+  connection   Connection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  sender       Student    @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([connectionId])
+  @@index([senderId])
+  @@map("messages")
+}
+
+// ================================================================
+// NOTIFICATION
+// ================================================================
+
+model Notification {
+  id        Int              @id @default(autoincrement())
+  studentId Int
+  title     String
+  message   String
+  type      NotificationType @default(INFO)
+  read      Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+
+  student   Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([read])
+  @@map("notifications")
 }
