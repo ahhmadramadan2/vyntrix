@@ -34,7 +34,7 @@ export const markAsRead = async (
   notificationId: number,
   studentId: number
 ) => {
-  return prisma.notification.update({
+  return prisma.notification.updateMany({
     where: { id: notificationId, studentId },
     data: { read: true },
   });
