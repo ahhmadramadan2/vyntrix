@@ -8,7 +8,11 @@ const httpServer = http.createServer(app);
 
 export const io = new Server(httpServer, {
   cors: {
-    origin: env.CLIENT_URL,
+    origin: [
+      "http://localhost:5173",
+      "https://vyntrix-psi.vercel.app",
+      env.CLIENT_URL,
+    ],
     methods: ["GET", "POST"],
     credentials: true,
   },

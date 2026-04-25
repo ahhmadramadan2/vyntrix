@@ -76,33 +76,40 @@ export const Chat = () => {
 
   // Connect socket on mount
   useEffect(() => {
-    if (student?.id) {
-      connectSocket(student.id);
-      const socket = getSocket();
+    if (!student?.id) return;
 
-      socket.on("receive_message", (message: Message) => {
-        if (message.connectionId === activeConn?.id) {
-          setMessages((prev) => [...prev, message]);
-        }
-        // Update last message in connections list
-        setConnections((prev) =>
-          prev.map((c) =>
-            c.id === message.connectionId
-              ? {
-                  ...c,
-                  messages: [
-                    { content: message.content, createdAt: message.createdAt },
-                  ],
-                }
-              : c,
-          ),
-        );
-      });
+    connectSocket(student.id);
+    const socket = getSocket();
 
-      return () => {
-        socket.off("receive_message");
-      };
-    }
+    // Re-join room on reconnect (critical for Render cold starts)
+    const handleConnect = () => {
+      socket.emit("join", student.id);
+      console.log("Socket connected, joined room:", student.id);
+    };
+
+    socket.on("connect", handleConnect);
+    socket.on("receive_message", (message: Message) => {
+      if (message.connectionId === activeConn?.id) {
+        setMessages((prev) => [...prev, message]);
+      }
+      setConnections((prev) =>
+        prev.map((c) =>
+          c.id === message.connectionId
+            ? {
+                ...c,
+                messages: [
+                  { content: message.content, createdAt: message.createdAt },
+                ],
+              }
+            : c,
+        ),
+      );
+    });
+
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("receive_message");
+    };
   }, [student?.id, activeConn?.id]);
 
   // Fetch connections and pending requests
@@ -187,6 +194,12 @@ export const Chat = () => {
     if (!newMessage.trim() || !activeConn || !student) return;
     const other = getOtherPerson(activeConn);
     const socket = getSocket();
+
+    if (!socket.connected) {
+      addToast("Not connected. Please refresh.", "error");
+      return;
+    }
+
     socket.emit("send_message", {
       connectionId: activeConn.id,
       senderId: student.id,
@@ -195,7 +208,6 @@ export const Chat = () => {
     });
     setNewMessage("");
   };
-
   if (loading)
     return (
       <div className="flex justify-center py-12">
