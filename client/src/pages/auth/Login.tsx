@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import api from "../../lib/axios";
 import { useAuthStore } from "../../store/authStore";
 import { useUiStore } from "../../store/uiStore";
@@ -12,6 +12,7 @@ export const Login = () => {
   const { setAuth } = useAuthStore();
   const { addToast } = useUiStore();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,9 +25,10 @@ export const Login = () => {
       const user = data.data.student || data.data.hrUser;
       setAuth(user, token, role);
       addToast("Welcome back!", "success");
-      navigate(
-        role === "STUDENT" ? "/student/dashboard" : "/company/dashboard",
-      );
+      const from =
+        (location.state as any)?.from ||
+        (role === "STUDENT" ? "/student/dashboard" : "/company/dashboard");
+      navigate(from);
     } catch (err: any) {
       addToast(err.response?.data?.message || "Login failed", "error");
     } finally {
