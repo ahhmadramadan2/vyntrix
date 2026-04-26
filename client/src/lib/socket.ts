@@ -7,7 +7,7 @@ let socket: Socket | null = null;
 export const getSocket = (): Socket => {
   if (!socket) {
     socket = io(SOCKET_URL, {
-      transports: ["websocket", "polling"], // polling as fallback — Render needs this
+      transports: ["websocket", "polling"],
       autoConnect: false,
       withCredentials: true,
     });
@@ -19,6 +19,12 @@ export const connectSocket = (studentId: number) => {
   const s = getSocket();
   if (!s.connected) {
     s.connect();
+    // Wait for connection before joining room
+    s.once("connect", () => {
+      s.emit("join", studentId);
+    });
+  } else {
+    // Already connected, just join
     s.emit("join", studentId);
   }
 };

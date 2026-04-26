@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from "react";
 import api from "../../lib/axios";
 import { useAuth } from "../../hooks/useAuth";
 import { Avatar } from "../../components/ui/Avatar";
-import { Spinner } from "../../components/ui/Spinner";
 import { useUiStore } from "../../store/uiStore";
 import { connectSocket, getSocket } from "../../lib/socket";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -68,7 +67,6 @@ export const Chat = () => {
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(true);
   const [sendingRequest, setSendingRequest] = useState<number | null>(null);
   const [tab, setTab] = useState<"chats" | "search" | "requests">("chats");
 
@@ -122,8 +120,7 @@ export const Chat = () => {
         setConnections(connRes.data.data);
         setPending(pendRes.data.data);
       })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .catch(() => {});
   }, []);
 
   // Search students
@@ -195,25 +192,23 @@ export const Chat = () => {
     const other = getOtherPerson(activeConn);
     const socket = getSocket();
 
-    if (!socket.connected) {
-      addToast("Not connected. Please refresh.", "error");
-      return;
-    }
+    const doSend = () => {
+      socket.emit("send_message", {
+        connectionId: activeConn.id,
+        senderId: student.id,
+        receiverId: other.id,
+        content: newMessage.trim(),
+      });
+      setNewMessage("");
+    };
 
-    socket.emit("send_message", {
-      connectionId: activeConn.id,
-      senderId: student.id,
-      receiverId: other.id,
-      content: newMessage.trim(),
-    });
-    setNewMessage("");
+    if (socket.connected) {
+      doSend();
+    } else {
+      socket.once("connect", doSend);
+      socket.connect();
+    }
   };
-  if (loading)
-    return (
-      <div className="flex justify-center py-12">
-        <Spinner size="lg" />
-      </div>
-    );
 
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-0 bg-dark-800 border border-slate-700/50 rounded-2xl overflow-hidden">
