@@ -83,8 +83,7 @@ export const sendApplicationStatusEmail = async (
                         </p>
                       </div>
                       <div style="text-align:center;">
-                        <a href="http://localhost:5173/student/applications"
-                          style="display:inline-block;background:#4f6ef7;color:white;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;">
+<a href="https://vyntrix-psi.vercel.app/student/applications"                          style="display:inline-block;background:#4f6ef7;color:white;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;">
                           View My Applications
                         </a>
                       </div>
