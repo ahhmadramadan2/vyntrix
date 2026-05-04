@@ -301,8 +301,8 @@ export const StudentProfile = () => {
         <h2 className="text-lg font-semibold text-white mb-4">Profile Links</h2>
         <div className="space-y-4">
           <Input
-            label="CV / Resume URL"
-            placeholder="https://drive.google.com/..."
+            label="CV / Portfolio URL"
+            placeholder="https://MyPortfolio.com/..."
             value={profile.profile?.cvUrl || ""}
             onChange={(e) =>
               setProfile({
