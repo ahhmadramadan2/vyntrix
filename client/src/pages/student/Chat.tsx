@@ -213,7 +213,11 @@ export const Chat = () => {
   return (
     <div className="flex h-[calc(100vh-8rem)] gap-0 bg-dark-800 border border-slate-700/50 rounded-2xl overflow-hidden">
       {/* Left Panel */}
-      <div className="w-80 border-r border-slate-700/50 flex flex-col flex-shrink-0">
+      <div
+        className={`w-full md:w-80 border-r border-slate-700/50 flex-col flex-shrink-0 ${
+          activeConn ? "hidden md:flex" : "flex"
+        }`}
+      >
         {/* Header */}
         <div className="p-4 border-b border-slate-700/50">
           <h2 className="text-lg font-bold text-white mb-3">Messages</h2>
@@ -383,7 +387,11 @@ export const Chat = () => {
       </div>
 
       {/* Right Panel — Chat Window */}
-      <div className="flex-1 flex flex-col">
+      <div
+        className={`flex-1 flex-col ${
+          activeConn ? "flex" : "hidden md:flex"
+        }`}
+      >
         {!activeConn ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center gap-3">
             <div className="w-16 h-16 rounded-2xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center text-3xl">
@@ -403,6 +411,25 @@ export const Chat = () => {
           <>
             {/* Chat Header */}
             <div className="p-4 border-b border-slate-700/50 flex items-center gap-3">
+              <button
+                onClick={() => setActiveConn(null)}
+                className="md:hidden -ml-1 p-1.5 rounded-lg text-slate-300 hover:bg-slate-800/50 transition-all"
+                aria-label="Back to conversations"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m15 18-6-6 6-6" />
+                </svg>
+              </button>
               {(() => {
                 const other = getOtherPerson(activeConn);
                 const fullName = `${other.firstName} ${other.lastName}`;
