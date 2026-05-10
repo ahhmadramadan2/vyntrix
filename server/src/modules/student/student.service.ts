@@ -112,13 +112,13 @@ export const uploadStudentCv = async (
   file: { buffer: Buffer; originalname: string; mimetype: string; size: number }
 ) => {
   const ALLOWED = ["application/pdf", "image/jpeg", "image/png"];
-  const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+  const MAX_SIZE = 25 * 1024 * 1024; // 25 MB
 
   if (!ALLOWED.includes(file.mimetype)) {
     throw new Error("Only PDF, JPG, or PNG files are allowed");
   }
   if (file.size > MAX_SIZE) {
-    throw new Error("File must be under 10 MB");
+    throw new Error("File must be under 25 MB");
   }
 
   // Sanitize filename, prepend studentId + timestamp to keep paths unique and predictable

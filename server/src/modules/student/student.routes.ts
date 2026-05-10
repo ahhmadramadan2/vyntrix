@@ -11,10 +11,10 @@ import {
 const router = Router();
 
 // Multer in-memory storage — keep the file in RAM, then forward to Supabase.
-// 10 MB cap matches the validation in the service layer.
+// 25 MB cap matches the validation in the service layer.
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 25 * 1024 * 1024 },
 });
 
 // All student routes require authentication and STUDENT role

@@ -90,8 +90,8 @@ export const StudentProfile = () => {
       addToast("Only PDF, JPG, or PNG files are allowed", "error");
       return;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      addToast("File must be under 10 MB", "error");
+    if (file.size > 25 * 1024 * 1024) {
+      addToast("File must be under 25 MB", "error");
       return;
     }
     setUploadingCv(true);
@@ -383,7 +383,7 @@ export const StudentProfile = () => {
                     <span className="text-primary-400">click to browse</span>
                   </p>
                   <p className="text-slate-500 text-xs mt-1.5">
-                    PDF, JPG, or PNG — max 10 MB
+                    PDF, JPG, or PNG — max 25 MB
                   </p>
                 </>
               )}
