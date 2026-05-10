@@ -13,7 +13,15 @@ export const uploadToSupabaseStorage = async (
   fileBuffer: Buffer,
   contentType: string
 ): Promise<string> => {
-  const uploadUrl = `${env.SUPABASE_URL}/storage/v1/object/${bucket}/${fileName}`;
+  // Defensive: strip trailing slash and any accidental path suffix
+  // (e.g. /rest/v1 or /storage/v1) from SUPABASE_URL — only the bare
+  // project URL like https://xxx.supabase.co should be used.
+  const baseUrl = env.SUPABASE_URL.replace(/\/+$/, "").replace(
+    /\/(rest|storage)\/v\d+\/?$/,
+    ""
+  );
+
+  const uploadUrl = `${baseUrl}/storage/v1/object/${bucket}/${fileName}`;
 
   const res = await fetch(uploadUrl, {
     method: "POST",
@@ -32,5 +40,5 @@ export const uploadToSupabaseStorage = async (
   }
 
   // Public URL pattern for a public bucket
-  return `${env.SUPABASE_URL}/storage/v1/object/public/${bucket}/${fileName}`;
+  return `${baseUrl}/storage/v1/object/public/${bucket}/${fileName}`;
 };
