@@ -172,7 +172,7 @@ export const ApplicantModal = ({
                 rel="noreferrer"
                 className="flex items-center gap-2 px-4 py-2 bg-green-500/10 border border-green-500/30 text-green-400 rounded-xl text-sm hover:bg-green-500/20 transition-all"
               >
-                📄 View CV / Resume
+                📄 View CV / Portfolio
               </a>
             ) : (
               <span className="flex items-center gap-2 px-4 py-2 bg-slate-800 border border-slate-700/50 text-slate-500 rounded-xl text-sm">
