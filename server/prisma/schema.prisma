@@ -319,6 +319,7 @@ model Application {
   applicationDate   DateTime          @default(now())
   applicationStatus ApplicationStatus @default(PENDING)
   coverLetter       String?
+  resumeUrl         String?
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 

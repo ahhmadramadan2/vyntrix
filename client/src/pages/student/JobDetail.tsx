@@ -17,6 +17,7 @@ export const JobDetail = () => {
   const [job, setJob] = useState<Job | null>(null);
   const [match, setMatch] = useState<MatchResult | null>(null);
   const [coverLetter, setCoverLetter] = useState("");
+  const [resumeUrl, setResumeUrl] = useState("");
   const [applying, setApplying] = useState(false);
   const [loading, setLoading] = useState(true);
   const [applied, setApplied] = useState(false);
@@ -26,8 +27,9 @@ export const JobDetail = () => {
       api.get(`/jobs/${id}`),
       api.get("/matching/my-matches"),
       api.get("/student/applications"),
+      api.get("/student/profile"),
     ])
-      .then(([jobRes, matchRes, appsRes]) => {
+      .then(([jobRes, matchRes, appsRes, profileRes]) => {
         setJob(jobRes.data.data);
         const m = matchRes.data.data.find(
           (r: MatchResult) => r.jobId === parseInt(id!),
@@ -38,6 +40,9 @@ export const JobDetail = () => {
           (a: { jobId: number }) => a.jobId === parseInt(id!),
         );
         setApplied(alreadyApplied);
+        // Pre-fill resume URL from the student's profile CV link
+        const profileCv = profileRes.data.data?.profile?.cvUrl;
+        if (profileCv) setResumeUrl(profileCv);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -46,7 +51,11 @@ export const JobDetail = () => {
   const handleApply = async () => {
     setApplying(true);
     try {
-      await api.post("/applications", { jobId: parseInt(id!), coverLetter });
+      await api.post("/applications", {
+        jobId: parseInt(id!),
+        coverLetter,
+        resumeUrl: resumeUrl.trim() || undefined,
+      });
       setApplied(true);
       addToast("Application submitted successfully!", "success");
     } catch (err: any) {
@@ -133,6 +142,24 @@ export const JobDetail = () => {
             <h2 className="text-lg font-semibold text-white mb-4">
               Apply for this Job
             </h2>
+            <div className="mb-3">
+              <label className="text-sm font-medium text-slate-300 mb-1.5 block">
+                Resume / CV Link
+              </label>
+              <input
+                type="url"
+                className="w-full px-4 py-3 rounded-lg bg-dark-900 border border-slate-700 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                placeholder="https://drive.google.com/... or any public link to your resume"
+                value={resumeUrl}
+                onChange={(e) => setResumeUrl(e.target.value)}
+                disabled={applied}
+              />
+              <p className="text-xs text-slate-500 mt-1.5">
+                Pre-filled from your profile. You can override it for this
+                application — paste a Google Drive, Dropbox, GitHub, or
+                personal-site link to your resume PDF.
+              </p>
+            </div>
             <textarea
               className="w-full h-32 px-4 py-3 rounded-lg bg-dark-900 border border-slate-700 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
               placeholder={

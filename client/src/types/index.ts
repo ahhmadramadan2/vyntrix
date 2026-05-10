@@ -109,6 +109,7 @@ export interface Application {
   applicationDate: string;
   applicationStatus: ApplicationStatus;
   coverLetter?: string;
+  resumeUrl?: string;
   job?: Job;
   student?: Student;
 }

@@ -128,6 +128,23 @@ export const ApplicantModal = ({
           </div>
         )}
 
+        {/* Resume submitted with this application */}
+        {application.resumeUrl && (
+          <div>
+            <p className="text-xs text-slate-500 uppercase tracking-wider mb-3">
+              Resume Submitted with this Application
+            </p>
+            <a
+              href={application.resumeUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-3 bg-primary-500/10 border border-primary-500/30 text-primary-400 rounded-xl text-sm hover:bg-primary-500/20 transition-all"
+            >
+              📄 View Resume
+            </a>
+          </div>
+        )}
+
         {/* Links */}
         <div>
           <p className="text-xs text-slate-500 uppercase tracking-wider mb-3">
@@ -195,6 +212,54 @@ export const ApplicantModal = ({
                   <Badge className="bg-primary-500/20 text-primary-400 text-xs">
                     {s.proficiencyLevel}
                   </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Projects */}
+        {student?.projects && student.projects.length > 0 && (
+          <div>
+            <p className="text-xs text-slate-500 uppercase tracking-wider mb-3">
+              Projects
+            </p>
+            <div className="space-y-3">
+              {student.projects.map((p) => (
+                <div
+                  key={p.id}
+                  className="bg-dark-900 rounded-xl p-4 border border-slate-700/50"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="font-semibold text-white">{p.title}</p>
+                    {p.projectUrl && (
+                      <a
+                        href={p.projectUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary-400 text-xs hover:underline flex-shrink-0"
+                      >
+                        View →
+                      </a>
+                    )}
+                  </div>
+                  {p.description && (
+                    <p className="text-slate-400 text-sm mt-1.5 leading-relaxed">
+                      {p.description}
+                    </p>
+                  )}
+                  {p.techStack && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {p.techStack.split(",").map((t, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-0.5 bg-primary-500/10 border border-primary-500/20 text-primary-400 rounded-lg text-xs"
+                        >
+                          {t.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

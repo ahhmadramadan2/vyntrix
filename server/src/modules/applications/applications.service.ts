@@ -5,7 +5,8 @@ import { createNotification } from "../notifications/notifications.service";
 export const applyToJob = async (
   studentId: number,
   jobId: number,
-  coverLetter?: string
+  coverLetter?: string,
+  resumeUrl?: string
 ) => {
   const existing = await prisma.application.findUnique({
     where: { studentId_jobId: { studentId, jobId } },
@@ -16,7 +17,7 @@ export const applyToJob = async (
   if (!job || job.status !== "OPEN") throw new Error("Job is not available");
 
   return prisma.application.create({
-    data: { studentId, jobId, coverLetter },
+    data: { studentId, jobId, coverLetter, resumeUrl },
     include: { job: { include: { company: true } } },
   });
 };

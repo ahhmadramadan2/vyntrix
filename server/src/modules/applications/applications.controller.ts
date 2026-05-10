@@ -4,8 +4,13 @@ import { sendSuccess, sendError } from "../../utils/response";
 
 export const applyToJob = async (req: Request, res: Response) => {
   try {
-    const { jobId, coverLetter } = req.body;
-    const application = await appService.applyToJob(req.user!.id, jobId, coverLetter);
+    const { jobId, coverLetter, resumeUrl } = req.body;
+    const application = await appService.applyToJob(
+      req.user!.id,
+      jobId,
+      coverLetter,
+      resumeUrl
+    );
     sendSuccess(res, application, "Application submitted", 201);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to apply";
