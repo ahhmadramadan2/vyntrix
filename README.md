@@ -133,13 +133,21 @@ Create `server/.env`:
 ```env
 DATABASE_URL=postgresql://...your Supabase pooler URL...
 JWT_SECRET=any-long-random-string
+JWT_EXPIRES_IN=7d
 PORT=5000
 NODE_ENV=development
 CLIENT_URL=http://localhost:5173
 RESEND_API_KEY=re_...your Resend key...
 FROM_EMAIL=onboarding@resend.dev
 IMGBB_API_KEY=your-imgbb-key
+SUPABASE_URL=https://xxxx.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 ```
+
+**Supabase Storage setup** (one-time, takes ~1 minute):
+
+1. In your Supabase dashboard, go to **Storage** → **New bucket** → name it `resumes` → toggle **Public bucket** ON → **Create**.
+2. Go to **Project Settings** → **API**. Copy the **Project URL** into `SUPABASE_URL` and the **service_role** key (under "Project API keys") into `SUPABASE_SERVICE_ROLE_KEY`. Keep the service_role key secret — it bypasses Row-Level Security.
 
 **3. Configure the frontend**
 

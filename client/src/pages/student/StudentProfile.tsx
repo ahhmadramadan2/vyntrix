@@ -27,6 +27,8 @@ export const StudentProfile = () => {
     techStack: "",
     projectUrl: "",
   });
+  const [uploadingCv, setUploadingCv] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const fetchProfile = () =>
     api.get("/student/profile").then((r) => setProfile(r.data.data));
@@ -82,6 +84,53 @@ export const StudentProfile = () => {
       setSavingSecurity(false);
     }
   };
+  const handleCvUpload = async (file: File) => {
+    const ALLOWED = ["application/pdf", "image/jpeg", "image/png"];
+    if (!ALLOWED.includes(file.type)) {
+      addToast("Only PDF, JPG, or PNG files are allowed", "error");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      addToast("File must be under 10 MB", "error");
+      return;
+    }
+    setUploadingCv(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const token = localStorage.getItem("vyntrix_token");
+      const baseUrl =
+        import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1";
+      const res = await fetch(`${baseUrl}/student/profile/cv`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(json.message || "Upload failed");
+      }
+      await fetchProfile();
+      addToast("CV uploaded successfully!", "success");
+    } catch (err: any) {
+      addToast(err.message || "Failed to upload CV", "error");
+    } finally {
+      setUploadingCv(false);
+    }
+  };
+
+  const handleCvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleCvUpload(file);
+  };
+
+  const handleCvDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleCvUpload(file);
+  };
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -124,7 +173,6 @@ export const StudentProfile = () => {
         gpa: profile.gpa,
       });
       await api.put("/student/profile/extended", {
-        cvUrl: profile.profile?.cvUrl,
         linkedinUrl: profile.profile?.linkedinUrl,
         githubUrl: profile.profile?.githubUrl,
         bio: profile.profile?.bio,
@@ -298,19 +346,73 @@ export const StudentProfile = () => {
       </Card>
 
       <Card>
+        <h2 className="text-lg font-semibold text-white mb-4">CV / Resume</h2>
+        <div className="space-y-3">
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleCvDrop}
+            className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+              isDragging
+                ? "border-primary-500 bg-primary-500/10"
+                : "border-slate-700/50 bg-dark-900/50 hover:border-primary-500/50"
+            }`}
+          >
+            <input
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+              onChange={handleCvFileChange}
+              disabled={uploadingCv}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+            />
+            <div className="pointer-events-none">
+              <div className="w-12 h-12 rounded-2xl bg-primary-500/10 border border-primary-500/20 flex items-center justify-center mx-auto mb-3 text-2xl">
+                📄
+              </div>
+              {uploadingCv ? (
+                <p className="text-primary-400 text-sm font-medium">
+                  Uploading...
+                </p>
+              ) : (
+                <>
+                  <p className="text-slate-200 text-sm font-medium">
+                    Drag &amp; drop your CV here, or{" "}
+                    <span className="text-primary-400">click to browse</span>
+                  </p>
+                  <p className="text-slate-500 text-xs mt-1.5">
+                    PDF, JPG, or PNG — max 10 MB
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
+          {profile.profile?.cvUrl && (
+            <div className="flex items-center justify-between gap-3 bg-dark-900 rounded-xl p-3 border border-slate-700/50">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-green-400 text-lg flex-shrink-0">✓</span>
+                <span className="text-slate-300 text-sm truncate">
+                  Current CV uploaded
+                </span>
+              </div>
+              <a
+                href={profile.profile.cvUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-primary-400 text-xs hover:underline flex-shrink-0"
+              >
+                View →
+              </a>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <Card>
         <h2 className="text-lg font-semibold text-white mb-4">Profile Links</h2>
         <div className="space-y-4">
-          <Input
-            label="CV / Portfolio URL"
-            placeholder="https://MyPortfolio.com/..."
-            value={profile.profile?.cvUrl || ""}
-            onChange={(e) =>
-              setProfile({
-                ...profile,
-                profile: { ...profile.profile!, cvUrl: e.target.value },
-              })
-            }
-          />
           <Input
             label="LinkedIn URL"
             placeholder="https://linkedin.com/in/..."

@@ -77,3 +77,21 @@ export const getMyApplications = async (req: Request, res: Response) => {
     sendError(res, "Failed to fetch applications", 500);
   }
 };
+
+export const uploadCv = async (req: Request, res: Response) => {
+  try {
+    if (!req.file) {
+      return sendError(res, "No file uploaded", 400);
+    }
+    const profile = await studentService.uploadStudentCv(req.user!.id, {
+      buffer: req.file.buffer,
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+    });
+    sendSuccess(res, profile, "CV uploaded successfully");
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to upload CV";
+    sendError(res, message, 400);
+  }
+};

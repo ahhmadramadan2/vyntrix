@@ -1,6 +1,7 @@
 import { prisma } from "../../config/db";
 import { recalculateForStudent } from "../matching/matching.service";
 import { StudentStatus, ProficiencyLevel } from "@prisma/client";
+import { uploadToSupabaseStorage } from "../../utils/supabase-storage";
 
 export const getStudentProfile = async (studentId: number) => {
   return prisma.student.findUnique({
@@ -104,6 +105,42 @@ export const removeProject = async (studentId: number, projectId: number) => {
   });
   // Auto-trigger matching recalculation
   await recalculateForStudent(studentId);
+};
+
+export const uploadStudentCv = async (
+  studentId: number,
+  file: { buffer: Buffer; originalname: string; mimetype: string; size: number }
+) => {
+  const ALLOWED = ["application/pdf", "image/jpeg", "image/png"];
+  const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+
+  if (!ALLOWED.includes(file.mimetype)) {
+    throw new Error("Only PDF, JPG, or PNG files are allowed");
+  }
+  if (file.size > MAX_SIZE) {
+    throw new Error("File must be under 10 MB");
+  }
+
+  // Sanitize filename, prepend studentId + timestamp to keep paths unique and predictable
+  const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const fileName = `${studentId}-${Date.now()}-${safeName}`;
+
+  const publicUrl = await uploadToSupabaseStorage(
+    "resumes",
+    fileName,
+    file.buffer,
+    file.mimetype
+  );
+
+  // Save the URL onto the student profile so it's used for all future applications
+  const profile = await prisma.studentProfile.upsert({
+    where: { studentId },
+    update: { cvUrl: publicUrl },
+    create: { studentId, cvUrl: publicUrl },
+  });
+
+  await recalculateForStudent(studentId);
+  return profile;
 };
 
 export const getMyApplications = async (studentId: number) => {
