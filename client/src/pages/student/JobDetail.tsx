@@ -22,13 +22,22 @@ export const JobDetail = () => {
   const [applied, setApplied] = useState(false);
 
   useEffect(() => {
-    Promise.all([api.get(`/jobs/${id}`), api.get("/matching/my-matches")])
-      .then(([jobRes, matchRes]) => {
+    Promise.all([
+      api.get(`/jobs/${id}`),
+      api.get("/matching/my-matches"),
+      api.get("/student/applications"),
+    ])
+      .then(([jobRes, matchRes, appsRes]) => {
         setJob(jobRes.data.data);
         const m = matchRes.data.data.find(
           (r: MatchResult) => r.jobId === parseInt(id!),
         );
         setMatch(m || null);
+        // Check if the student already applied to this job
+        const alreadyApplied = appsRes.data.data.some(
+          (a: { jobId: number }) => a.jobId === parseInt(id!),
+        );
+        setApplied(alreadyApplied);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -124,36 +133,38 @@ export const JobDetail = () => {
             <h2 className="text-lg font-semibold text-white mb-4">
               Apply for this Job
             </h2>
-            {applied ? (
-              <div className="text-center py-6">
-                <p className="text-green-400 font-medium">
-                  ✓ Application submitted!
-                </p>
-                <Button
-                  variant="ghost"
-                  className="mt-3"
-                  onClick={() => navigate("/student/applications")}
-                >
-                  View My Applications
-                </Button>
-              </div>
-            ) : (
-              <>
-                <textarea
-                  className="w-full h-32 px-4 py-3 rounded-lg bg-dark-900 border border-slate-700 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
-                  placeholder="Write a cover letter (optional)..."
-                  value={coverLetter}
-                  onChange={(e) => setCoverLetter(e.target.value)}
-                />
-                <Button
-                  className="mt-3 w-full"
-                  size="lg"
-                  loading={applying}
-                  onClick={handleApply}
-                >
-                  Submit Application
-                </Button>
-              </>
+            <textarea
+              className="w-full h-32 px-4 py-3 rounded-lg bg-dark-900 border border-slate-700 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+              placeholder={
+                applied
+                  ? "You have already applied to this job."
+                  : "Write a cover letter (optional)..."
+              }
+              value={coverLetter}
+              onChange={(e) => setCoverLetter(e.target.value)}
+              disabled={applied}
+            />
+            <Button
+              className={`mt-3 w-full ${
+                applied
+                  ? "!bg-slate-700 hover:!bg-slate-700 !text-slate-400 !cursor-not-allowed"
+                  : ""
+              }`}
+              size="lg"
+              loading={applying}
+              disabled={applied}
+              onClick={handleApply}
+            >
+              {applied ? "✓ Already Applied" : "Submit Application"}
+            </Button>
+            {applied && (
+              <Button
+                variant="ghost"
+                className="mt-2 w-full"
+                onClick={() => navigate("/student/applications")}
+              >
+                View My Applications
+              </Button>
             )}
           </Card>
         </div>
